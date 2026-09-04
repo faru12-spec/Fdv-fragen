@@ -64,16 +64,16 @@ async function saveCorrectionsToSupabase(corrections) {
     opt_tags: corrections[nr].optTags,
     opt_notes: corrections[nr].optNotes,
   }));
-  if (rows.length === 0) return { ok: true };
+  if (rows.length === 0) return { ok: true, rowCount: 0, skipped: true };
   const res = await fetch(SUPABASE_URL + "/rest/v1/question_review", {
     method: "POST",
-    headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates" },
+    headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates,return=representation" },
     body: JSON.stringify(rows),
   });
-  if (res.ok) return { ok: true };
   let detail = "";
   try { detail = await res.text(); } catch (e) {}
-  return { ok: false, status: res.status, detail };
+  if (res.ok) return { ok: true, rowCount: rows.length, detail: detail.slice(0, 200) };
+  return { ok: false, status: res.status, detail, rowCount: rows.length };
 }
 
 // Nur die tatsaechlichen Aenderungen pro Frage sichern (nicht den ganzen Fragenkatalog).
@@ -415,10 +415,10 @@ function App() {
       const corrections = buildCorrections(currentQs);
       const result = await saveCorrectionsToSupabase(corrections);
       if (!result.ok) {
-        setSaveErrorDetail("HTTP " + result.status + ": " + (result.detail || "").slice(0, 300));
+        setSaveErrorDetail("HTTP " + result.status + " (Zeilen: " + result.rowCount + "): " + (result.detail || "").slice(0, 300));
         throw new Error("Speichern fehlgeschlagen");
       }
-      setSaveErrorDetail("");
+      setSaveErrorDetail("OK - Zeilen gesendet: " + result.rowCount + (result.skipped ? " (uebersprungen, da 0)" : "") + " | Antwort: " + (result.detail || "").slice(0,150));
       setSaveState("saved");
     } catch (e) {
       if (!saveErrorDetail) setSaveErrorDetail(String(e && e.message ? e.message : e));
@@ -608,11 +608,12 @@ function App() {
         }}>Export</button>
       </div>
 
-      {saveState === "error" && saveErrorDetail && (
-        <div style={{ background:"#fbeaea", color:"#7a1f1f", padding:"8px 20px",
+      {saveErrorDetail && (
+        <div style={{ background: saveState === "error" ? "#fbeaea" : "#edf7f0",
+          color: saveState === "error" ? "#7a1f1f" : "#1a5c2e", padding:"8px 20px",
           fontSize:12, fontFamily:"monospace", wordBreak:"break-word",
           borderBottom:"1px solid rgba(0,0,0,0.08)" }}>
-          Speicherfehler-Detail: {saveErrorDetail}
+          Diagnose: {saveErrorDetail}
         </div>
       )}
 
