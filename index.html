@@ -14,7 +14,7 @@
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel" data-presets="react">
+<script type="text/plain" id="app-source">
 const { useState, useCallback, useEffect, useRef } = React;
 
 
@@ -851,6 +851,19 @@ function App() {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);
+</script>
+<script>
+  // Manueller Transform statt automatischer text/babel-Verarbeitung:
+  // erzwingt die "classic" JSX-Runtime (React.createElement), da die
+  // "automatic" Runtime ein import-Statement erzeugt, das in einem
+  // einfachen <script> ohne Bundler zu einem SyntaxError fuehrt.
+  var sourceEl = document.getElementById('app-source');
+  var source = sourceEl.textContent;
+  var output = Babel.transform(source, {
+    presets: [["react", { runtime: "classic" }]],
+    filename: "app.jsx"
+  }).code;
+  (0, eval)(output);
 </script>
 </body>
 </html>
