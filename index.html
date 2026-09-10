@@ -409,46 +409,56 @@ function App() {
 
   // "idle" | "loading" | "saving" | "saved" | "error"
   const [saveState, setSaveState] = useState("loading");
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState(null);
+  const [isDirty, setIsDirty] = useState(false);
   const saveTimer = useRef(null);
 
-  // Beim Start: gespeicherten Stand aus Supabase laden und ueber die aktuelle Fragenliste legen.
-  // Ist die Datenbank noch leer (allererster Start mit dieser Anbindung), wird der im
-  // Code bereits vorhandene Stand (INITIAL_QS) einmalig hochgeladen, damit die Datenbank
-  // ab sofort die Quelle der Wahrheit ist.
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const corrections = await loadCorrectionsFromSupabase();
-        if (cancelled) return;
-        if (corrections && Object.keys(corrections).length > 0) {
-          const { merged, toResync } = mergeCorrections(INITIAL_QS, corrections);
-          setQs(merged);
-          setOpenSet(new Set(merged.filter(q => !q.approved).map(q => q.nr)));
-          if (toResync.length > 0) {
-            // Fragen, deren Code-Inhalt seit der letzten Speicherung korrigiert wurde:
-            // frischen Stand in die DB zurueckschreiben, damit alte Tags nicht wieder auftauchen.
-            const freshQs = merged.filter(q => toResync.includes(q.nr));
-            const resyncCorrections = buildCorrections(freshQs);
-            await saveCorrectionsToSupabase(resyncCorrections);
-          }
-        } else {
-          // Datenbank leer -> aktuellen Stand aus dem Code als Erstbefuellung hochladen
-          const seed = buildCorrections(INITIAL_QS);
-          await saveCorrectionsToSupabase(seed);
+  const loadFromSupabase = useCallback(async () => {
+    setSaveState("loading");
+    setLoadFailed(false);
+    try {
+      const corrections = await loadCorrectionsFromSupabase();
+      if (corrections && Object.keys(corrections).length > 0) {
+        const { merged, toResync } = mergeCorrections(INITIAL_QS, corrections);
+        setQs(merged);
+        setOpenSet(new Set(merged.filter(q => !q.approved).map(q => q.nr)));
+        if (toResync.length > 0) {
+          // Fragen, deren Code-Inhalt seit der letzten Speicherung korrigiert wurde:
+          // frischen Stand in die DB zurueckschreiben, damit alte Tags nicht wieder auftauchen.
+          const freshQs = merged.filter(q => toResync.includes(q.nr));
+          const resyncCorrections = buildCorrections(freshQs);
+          await saveCorrectionsToSupabase(resyncCorrections);
         }
-      } catch (e) {
-        // Netzwerkfehler o.ae. - beim allerersten Mal normal, App bleibt mit INITIAL_QS nutzbar.
-      } finally {
-        if (!cancelled) setSaveState("idle");
+      } else {
+        // Datenbank WIRKLICH leer (Anfrage war erfolgreich, ergab aber 0 Zeilen) ->
+        // aktuellen Stand aus dem Code als Erstbefuellung hochladen. Dies passiert nur,
+        // wenn das Laden selbst erfolgreich war - nie bei einem Netzwerk-/Serverfehler.
+        const seed = buildCorrections(INITIAL_QS);
+        await saveCorrectionsToSupabase(seed);
       }
-    })();
-    return () => { cancelled = true; };
+      setSaveState("idle");
+      setIsDirty(false);
+    } catch (e) {
+      // Laden ist fehlgeschlagen: NIE mit dem Code-Basis-Stand weiterarbeiten und niemals
+      // automatisch speichern, sonst wuerden echte Daten in der DB ueberschrieben.
+      setLoadFailed(true);
+      setSaveState("load_error");
+    }
   }, []);
+
+  useEffect(() => { loadFromSupabase(); }, [loadFromSupabase]);
 
   const [saveErrorDetail, setSaveErrorDetail] = useState("");
 
   const persist = useCallback(async (currentQs) => {
+    if (loadFailed) {
+      // Sicherheitssperre: solange der letzte Ladevorgang fehlgeschlagen ist, NIE speichern -
+      // das wuerde sonst den (moeglicherweise veralteten) lokalen Stand in die DB schreiben
+      // und echte Daten ueberschreiben.
+      setSaveState("load_error");
+      return;
+    }
     setSaveState("saving");
     try {
       const corrections = buildCorrections(currentQs);
@@ -459,13 +469,16 @@ function App() {
       }
       setSaveErrorDetail("");
       setSaveState("saved");
+      setLastSavedAt(new Date());
+      setIsDirty(false);
     } catch (e) {
       if (!saveErrorDetail) setSaveErrorDetail(String(e && e.message ? e.message : e));
       setSaveState("error");
     }
-  }, []);
+  }, [loadFailed]);
 
   const updateQ = useCallback((nr, patch) => {
+    setIsDirty(true);
     setQs(prev => {
       const next = prev.map(q => q.nr === nr ? { ...q, ...patch } : q);
       if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -617,22 +630,45 @@ function App() {
         </div>
         <div style={{ flex:1 }} />
 
-        <div style={{ fontSize:12, opacity:0.85, minWidth:110, textAlign:"right" }}>
-          {saveState === "loading" && "Lade gespeicherten Stand..."}
-          {saveState === "saving"  && "Speichert..."}
-          {saveState === "saved"   && "✓ Gespeichert"}
-          {saveState === "error"   && "⚠ Fehler beim Speichern"}
-          {saveState === "idle"    && ""}
+        <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:12, opacity:0.9, minWidth:170, textAlign:"right", justifyContent:"flex-end" }}>
+          <span style={{
+            display:"inline-block", width:10, height:10, borderRadius:"50%", flexShrink:0,
+            background:
+              saveState === "load_error" ? "#b83030" :
+              saveState === "error" ? "#b83030" :
+              saveState === "loading" ? "#999" :
+              saveState === "saving" ? "#e8860a" :
+              isDirty ? "#e8860a" : "#2fa84f",
+          }} />
+          <span>
+            {saveState === "loading" && "Lade gespeicherten Stand..."}
+            {saveState === "load_error" && "⚠ Laden fehlgeschlagen - nicht speicherbar"}
+            {saveState === "saving" && "Speichert..."}
+            {saveState === "error" && "⚠ Fehler beim Speichern"}
+            {(saveState === "saved" || saveState === "idle") && !isDirty && lastSavedAt &&
+              ("✓ Gespeichert um " + lastSavedAt.toLocaleTimeString("de-CH", {hour:"2-digit", minute:"2-digit", second:"2-digit"}))}
+            {(saveState === "saved" || saveState === "idle") && !isDirty && !lastSavedAt && "✓ Aktuell"}
+            {(saveState === "saved" || saveState === "idle") && isDirty && "Ungespeicherte Änderungen..."}
+          </span>
         </div>
 
-        <button onClick={saveNow} disabled={saveState === "saving"} style={{
-          padding:"8px 20px", borderRadius:8, border:"none", fontWeight:700,
-          fontSize:13, cursor: saveState === "saving" ? "default" : "pointer",
-          background: saveState === "error" ? "#b83030" : "#e8860a", color:"#fff",
-          opacity: saveState === "saving" ? 0.7 : 1,
-        }}>
-          {saveState === "error" ? "Erneut speichern" : "Jetzt speichern"}
-        </button>
+        {saveState === "load_error" ? (
+          <button onClick={loadFromSupabase} style={{
+            padding:"8px 20px", borderRadius:8, border:"none", fontWeight:700,
+            fontSize:13, cursor:"pointer", background:"#b83030", color:"#fff",
+          }}>
+            Erneut laden
+          </button>
+        ) : (
+          <button onClick={saveNow} disabled={saveState === "saving"} style={{
+            padding:"8px 20px", borderRadius:8, border:"none", fontWeight:700,
+            fontSize:13, cursor: saveState === "saving" ? "default" : "pointer",
+            background: saveState === "error" ? "#b83030" : "#e8860a", color:"#fff",
+            opacity: saveState === "saving" ? 0.7 : 1,
+          }}>
+            {saveState === "error" ? "Erneut speichern" : "Jetzt speichern"}
+          </button>
+        )}
 
         <button onClick={openImport} title="Zuvor exportierte Korrekturen einspielen" style={{
           padding:"8px 16px", borderRadius:8, fontWeight:600,
