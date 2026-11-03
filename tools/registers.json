@@ -1,0 +1,18 @@
+[
+ {"id":"begriffe","label":"R 300.1 Begriffe","title":"R 300.1 BEGRIFFE","file":"begriffe.json","min":1,"max":81},
+ {"id":"signale","label":"R 300.2 Signale","title":"R 300.2 SIGNALE","file":"signale.json","min":82,"max":410},
+ {"id":"nachrichten","label":"R 300.3 Nachrichten","title":"R 300.3 NACHRICHTEN","file":"nachrichten.json","min":411,"max":623},
+ {"id":"r4k1","label":"R 300.4 K1","title":"R 300.4 RANGIERBEWEGUNGEN - KAP. 1","file":"r4k1.json","min":624,"max":727},
+ {"id":"r4k2","label":"R 300.4 K2","title":"R 300.4 RANGIERBEWEGUNGEN - KAP. 2","file":"r4k2.json","min":728,"max":865},
+ {"id":"r4k3","label":"R 300.4 K3","title":"R 300.4 RANGIERBEWEGUNGEN - KAP. 3","file":"r4k3.json","min":866,"max":957},
+ {"id":"r4k4","label":"R 300.4 K4","title":"R 300.4 RANGIERBEWEGUNGEN - KAP. 4","file":"r4k4.json","min":958,"max":1025},
+ {"id":"r4k56","label":"R 300.4 K5-6","title":"R 300.4 RANGIERBEWEGUNGEN - KAP. 5-6","file":"r4k56.json","min":1026,"max":1098},
+ {"id":"r5k1","label":"R 300.5 K1","title":"R 300.5 ZUGVORBEREITUNG - KAP. 1","file":"r5k1.json","min":1099,"max":1157},
+ {"id":"r5k2","label":"R 300.5 K2","title":"R 300.5 ZUGVORBEREITUNG - KAP. 2","file":"r5k2.json","min":1158,"max":1184},
+ {"id":"r5k3","label":"R 300.5 K3","title":"R 300.5 ZUGVORBEREITUNG - KAP. 3","file":"r5k3.json","min":1185,"max":1279},
+ {"id":"r5k4","label":"R 300.5 K4","title":"R 300.5 ZUGVORBEREITUNG - KAP. 4","file":"r5k4.json","min":1280,"max":1346},
+ {"id":"r6k12","label":"R 300.6 K1-2","title":"R 300.6 ZUGFAHRTEN - KAP. 1-2","file":"r6k12.json","min":1347,"max":1413},
+ {"id":"r6k3","label":"R 300.6 K3","title":"R 300.6 ZUGFAHRTEN - KAP. 3","file":"r6k3.json","min":1414,"max":1458},
+ {"id":"r6k4","label":"R 300.6 K4","title":"R 300.6 ZUGFAHRTEN - KAP. 4","file":"r6k4.json","min":1459,"max":1505},
+ {"id":"r6k56","label":"R 300.6 K5-6","title":"R 300.6 ZUGFAHRTEN - KAP. 5-6","file":"r6k56.json","min":1506,"max":1562}
+]
