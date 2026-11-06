@@ -573,7 +573,7 @@ function App() {
   const claudeLinkRef = useRef(null);
 
   const openClaudeLink = useCallback(() => {
-    const url = SUPABASE_URL + "/rest/v1/rpc/get_all_reviews?apikey=" + SUPABASE_KEY + "&bust=" + Date.now();
+    const url = SUPABASE_URL + "/rest/v1/review_neu?apikey=" + SUPABASE_KEY + "&select=nr,note,opt_tags,opt_notes,approved&order=nr.desc&limit=" + (400 + (Date.now() % 100));
     setClaudeLink(url);
     setClaudeLinkCopyState("idle");
     setClaudeLinkOpen(true);
