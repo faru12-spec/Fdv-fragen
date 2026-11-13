@@ -19,19 +19,29 @@ const SUPABASE_HEADERS = {
 // Laedt alle gespeicherten Zeilen aus Supabase und baut daraus dasselbe
 // "corrections"-Objekt (keyed by nr), das buildCorrections/mergeCorrections erwarten.
 async function loadCorrectionsFromSupabase() {
-  let res = await fetch(
-    SUPABASE_URL + "/rest/v1/question_review?select=nr,approved,p,note,opt_tags,opt_notes,content_version",
-    { headers: SUPABASE_HEADERS }
-  );
-  if (!res.ok) {
-    // Fallback falls die Spalte content_version in der DB noch nicht existiert (Migration nicht ausgefuehrt)
-    res = await fetch(
-      SUPABASE_URL + "/rest/v1/question_review?select=nr,approved,p,note,opt_tags,opt_notes",
+  // Supabase liefert pro Abfrage hoechstens 1000 Zeilen -> seitenweise laden, sonst fehlen Freigaben.
+  const PAGE = 1000;
+  const cols = ["nr,approved,p,note,opt_tags,opt_notes,content_version", "nr,approved,p,note,opt_tags,opt_notes"];
+  let colIdx = 0;
+  const rows = [];
+  for (let offset = 0; ; offset += PAGE) {
+    let res = await fetch(
+      SUPABASE_URL + "/rest/v1/question_review?select=" + cols[colIdx] + "&order=nr.asc&limit=" + PAGE + "&offset=" + offset,
       { headers: SUPABASE_HEADERS }
     );
+    if (!res.ok && colIdx === 0 && offset === 0) {
+      // Fallback falls die Spalte content_version in der DB noch nicht existiert
+      colIdx = 1;
+      res = await fetch(
+        SUPABASE_URL + "/rest/v1/question_review?select=" + cols[1] + "&order=nr.asc&limit=" + PAGE + "&offset=0",
+        { headers: SUPABASE_HEADERS }
+      );
+    }
     if (!res.ok) throw new Error("Supabase Ladefehler: " + res.status);
+    const part = await res.json();
+    rows.push(...part);
+    if (part.length < PAGE) break;
   }
-  const rows = await res.json();
   const out = {};
   rows.forEach(r => {
     out[r.nr] = {
