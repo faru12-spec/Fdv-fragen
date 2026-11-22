@@ -253,6 +253,11 @@ function QuestionRow({ q, open, onToggle, onChange }) {
             background:"#5b2d8e", color:"#fff", padding:"1px 7px", borderRadius:7 }}>
             MEHRFACH
           </span>
+        )}{q.type === "order" && (
+          <span style={{ fontSize:10, fontWeight:700, marginLeft:8,
+            background:"#0b6e8a", color:"#fff", padding:"1px 7px", borderRadius:7 }}>
+            REIHENFOLGE
+          </span>
         )}</span>
 
         {issues && !q.approved && (
@@ -290,8 +295,15 @@ function QuestionRow({ q, open, onToggle, onChange }) {
           <div style={{ marginBottom:16 }}>
             <div style={{ fontSize:11, fontWeight:700, letterSpacing:"0.06em",
               color:"#666", marginBottom:10 }}>
-              {q.multiSelect ? "ANTWORTEN (Mehrfachauswahl - mehrere richtig)" : "ANTWORTEN"}
+              {q.type === "order" ? "SCHRITTE (richtige in die richtige Reihenfolge bringen, falsche ausklammern)" : q.multiSelect ? "ANTWORTEN (Mehrfachauswahl - mehrere richtig)" : "ANTWORTEN"}
             </div>
+            {q.type === "order" && (
+              <div style={{ marginBottom:10, padding:"8px 12px", borderRadius:9,
+                background:"#e6f4f8", border:"1px solid #0b6e8a", fontSize:12, color:"#0b6e8a", lineHeight:1.6 }}>
+                <b>Richtige Reihenfolge:</b>{" "}
+                {q.opts.filter(o => o.c && o.o).sort((a, b) => a.o - b.o).map(o => o.o + ". " + o.t).join("  ->  ")}
+              </div>
+            )}
             {q.opts.map(opt => (
               <div key={opt.l} style={{
                 marginBottom:10, padding:"10px 12px", borderRadius:9,
@@ -318,7 +330,7 @@ function QuestionRow({ q, open, onToggle, onChange }) {
                     {opt.c && (
                       <span style={{ fontSize:11, marginLeft:6,
                         background:"#1a7a3c", color:"#fff",
-                        padding:"1px 6px", borderRadius:6 }}>KORREKT</span>
+                        padding:"1px 6px", borderRadius:6 }}>{q.type === "order" && opt.o ? "SCHRITT " + opt.o : "KORREKT"}</span>
                     )}
                   </span>
                 </div>

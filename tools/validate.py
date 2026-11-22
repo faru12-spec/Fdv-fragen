@@ -4,6 +4,10 @@ bad=[];seen=set()
 for r in json.load(open(f'{R}/tools/registers.json',encoding='utf-8')):
     for x in json.load(open(f"{R}/data/{r['file']}",encoding='utf-8')):
         o=x['opts']
+        if x.get('type')=='order':
+            pos=sorted(a['o'] for a in o if a['c'])
+            if pos!=list(range(1,len(pos)+1)) or len(pos)<3 or len(pos)==len(o): bad.append(x['nr'])
+            seen.add(x['nr']); continue
         if x['nr']<624 or x.get('multiSelect'): ok=len(o)>=2 and any(a['c'] for a in o)
         else: ok=len(o)==4 and sum(1 for a in o if a['c'])==1
         if x['nr'] in seen or not ok or (x['nr']>=624 and ((not x.get('multiSelect') and not x['q'].endswith('?')) or len({a['t'] for a in o})!=len(o))): bad.append(x['nr'])

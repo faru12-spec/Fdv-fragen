@@ -3,3 +3,4 @@
 - App-Quelltext: `src/app.jsx`. Nach Aenderungen: `python3 tools/build.py` (braucht node + `npm i @babel/core @babel/preset-react terser` in `tools/`, `NODE_PATH` auf dessen node_modules).
 - Neue Fragen: `tools/helper.py` (siehe Docstring), danach `python3 tools/validate.py`.
 - Backup aller Fragen vom 2026-11-03: `backup/fragen_backup_2026-11-03.json`.
+- Fragetyp Reihenfolge: Feld `"type":"order"`, Optionen mit `"c":true` und Position `"o":1..n` (richtige Schritte), falsche Schritte `"c":false` ohne `o`.
