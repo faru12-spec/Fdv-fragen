@@ -258,6 +258,11 @@ function QuestionRow({ q, open, onToggle, onChange }) {
             background:"#0b6e8a", color:"#fff", padding:"1px 7px", borderRadius:7 }}>
             REIHENFOLGE
           </span>
+        )}{q.followUp && (
+          <span style={{ fontSize:10, fontWeight:700, marginLeft:8,
+            background:"#8a5a00", color:"#fff", padding:"1px 7px", borderRadius:7 }}>
+            FOLGEFRAGE {"→"} {q.followUp}
+          </span>
         )}</span>
 
         {issues && !q.approved && (
