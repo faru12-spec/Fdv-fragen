@@ -134,5 +134,13 @@
   "file": "r7.json",
   "min": 1563,
   "max": 1604
+ },
+ {
+  "id": "r8",
+  "label": "R 300.8",
+  "title": "R 300.8 ARBEITSSICHERHEIT",
+  "file": "r8.json",
+  "min": 1605,
+  "max": 1649
  }
 ]
