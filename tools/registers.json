@@ -158,5 +158,13 @@
   "file": "r10.json",
   "min": 1873,
   "max": 1915
+ },
+ {
+  "id": "r11",
+  "label": "R 300.11",
+  "title": "R 300.11 SCHALTEN UND ERDEN VON FAHRLEITUNGEN",
+  "file": "r11.json",
+  "min": 1916,
+  "max": 1945
  }
 ]
