@@ -142,5 +142,13 @@
   "file": "r8.json",
   "min": 1605,
   "max": 1649
+ },
+ {
+  "id": "r9",
+  "label": "R 300.9",
+  "title": "R 300.9 STÖRUNGEN UND UNREGELMÄSSIGKEITEN",
+  "file": "r9.json",
+  "min": 1650,
+  "max": 1872
  }
 ]
