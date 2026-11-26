@@ -174,5 +174,13 @@
   "file": "r12.json",
   "min": 1946,
   "max": 2083
+ },
+ {
+  "id": "r13",
+  "label": "R 300.13",
+  "title": "R 300.13 LOKFÜHRER",
+  "file": "r13.json",
+  "min": 2084,
+  "max": 2148
  }
 ]
