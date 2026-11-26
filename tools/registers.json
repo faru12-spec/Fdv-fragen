@@ -150,5 +150,13 @@
   "file": "r9.json",
   "min": 1650,
   "max": 1872
+ },
+ {
+  "id": "r10",
+  "label": "R 300.10",
+  "title": "R 300.10 FORMULARE",
+  "file": "r10.json",
+  "min": 1873,
+  "max": 1915
  }
 ]
