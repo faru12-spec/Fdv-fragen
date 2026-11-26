@@ -166,5 +166,13 @@
   "file": "r11.json",
   "min": 1916,
   "max": 1945
+ },
+ {
+  "id": "r12",
+  "label": "R 300.12",
+  "title": "R 300.12 ARBEITEN IM GLEISBEREICH",
+  "file": "r12.json",
+  "min": 1946,
+  "max": 2083
  }
 ]
